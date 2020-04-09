@@ -14,6 +14,13 @@ const state = {
     play : 1,
     gameOver : 2
 }
+// this code is for the start button
+const startBTN = {
+    x : 120,
+    y : 263,
+    w : 83,
+    h : 29
+}
 // code to control the start of the game 
 cvs.addEventListener("click", function(event){
     switch(state.current){
@@ -23,8 +30,12 @@ cvs.addEventListener("click", function(event){
         case state.play:
         Bird.flap();
         break;
+
         case state.gameOver:
-        state.current = state.getReady;
+                pipes.reset();
+                Bird.speedReset();
+                score.reset();
+                state.current = state.getReady;
         break;
     }
 });
@@ -85,6 +96,7 @@ const Bird = {
     y : 150,
     w : 34,
     h : 26,
+    radius : 12,
 
     frame : 0,
     // this code will allow for the bird to move 
@@ -135,6 +147,9 @@ const Bird = {
               this.rotation = -25*DEGREES;  
             }
         }
+    },
+    speedReset : function(){
+        this.speed = 0;
     }
 }
 // this code is for the get ready measege 
@@ -169,6 +184,35 @@ const gameOver = {
         
     }
 }
+
+// this code is for the score
+const score = {
+    best : parseInt(localStorage.getItem("best")) || 0,
+    value : 0,
+
+    // this code will show the score on the screen 
+    draw : function(){
+        ctx.fillStyle = "#fafafa";
+        if(state.current == state.play){
+            ctx.lineWidth = 2;
+            ctx.font = "35px Gotu";
+            ctx.fillText(this.value, cvs.width/2, 50);
+            ctx.strokeText(this.value, cvs.width/2, 50);
+
+        }else if(state.current == state.gameOver){
+            // code for the score value
+            ctx.font = "25px Gotu";
+            ctx.fillText(this.value, 225, 186);
+            ctx.strokeText(this.value, 225, 186);
+            // this will be the best score
+            ctx.fillText(this.best, 225, 228);
+            ctx.strokeText(this.best, 225, 228);
+        }
+    },
+    reset : function(){
+        this.value = 0;
+    }
+}
 // this code will be for the pipes
 const pipes = {
     position : [],
@@ -183,7 +227,7 @@ const pipes = {
     },
     w : 53,
     h : 400,
-    gap : 85,
+    gap : 90,
     maxYPos : -150,
     dx : 2,
 
@@ -193,7 +237,53 @@ const pipes = {
             let p = this.position[i];
             let topYpos = p.y;
             let bottomYpos = p.y + this.h + this.gap;
+            // this is for the top pipe
+            ctx.drawImage(sprite, this.top.sX, this.top.sY, this.w, this.h, p.x, topYpos, this.w, this.h);
+            // this code is for bottom pipe
+            ctx.drawImage(sprite, this.bottom.sX, this.bottom.sY, this.w, this.h, p.x, bottomYpos, this.w, this.h);
         }
+    },
+    update: function(){
+        if(state.current !== state.play) return;
+        
+// this code will allow for the pipes to dyplay randomly
+        if(frames%100 == 0){
+            this.position.push({
+                x : cvs.width,
+                y : this.maxYPos * (Math.random()+1)
+            });
+        }
+        for(let i = 0; i < this.position.length; i++){
+            let p = this.position[i];
+            let bottomPipeYPossition = p.y + this.h + this.gap;
+            // this code will be for the collision when it hits a pipe 
+            // collision with top pipe 
+            if(Bird.x + Bird.radius > p.x && Bird.x - Bird.radius < p.x + this.w && Bird.y
+                + Bird.radius > p.y && Bird.y - Bird.radius < p.y + this.h){
+                    state.current = state.gameOver;
+                }
+                // this code moves the pipes to the left
+                p.x -= this.dx;
+                 // collision with bottom pipe 
+            if(Bird.x + Bird.radius > p.x && Bird.x - Bird.radius < p.x + this.w && Bird.y
+                + Bird.radius > bottomPipeYPossition && Bird.y - Bird.radius < bottomPipeYPossition + this.h){
+                    state.current = state.gameOver;
+                }
+            // this code will allow for the pipes to be deleted afer they go pass the canvas 
+            if(p.x + this.w <=0){
+                this.position.shift();
+                score.value += 1;
+
+                score.best = Math.max(score.value, score.best);
+                localStorage.setItem("best", score.best);
+            }
+            if(score.value == 1){
+                p.x -= this.dx * 2;
+            }
+        }
+    },
+    reset : function(){
+        this.position = [];
     }
 }
 // function that will allow for the function do draw
@@ -202,10 +292,12 @@ function draw(){
     ctx.fillStyle = "#70c5ce";
     ctx.fillRect(0, 0, cvs.width, cvs.height);
     bg.draw();
+    pipes.draw();
     fg.draw();
     Bird.draw();
     getReady.draw();
     gameOver.draw();
+    score.draw();
 
 };
 // code for the function to update
@@ -213,6 +305,7 @@ function update(){
     Bird.update();
     fg.update();
     bg.update();
+    pipes.update();
 };
 // code for the function to loop
 function loop(){
