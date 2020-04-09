@@ -14,6 +14,17 @@ const state = {
     play : 1,
     gameOver : 2
 }
+// code for the sound
+const SCORE_S = new Audio();
+SCORE_S.src = "audio/sfx_point.wav";
+const FLAP = new Audio();
+FLAP.src = "audio/sfx_flap.wav";
+const DIE = new Audio();
+DIE.src = "audio/sfx_die.wav";
+const SWOOSHING = new Audio();
+SWOOSHING.src = "audio/sfx_swooshing.wav";
+const HIT = new Audio();
+HIT.src = "audio/sfx_hit.wav";
 // this code is for the start button
 const startBTN = {
     x : 120,
@@ -26,9 +37,11 @@ cvs.addEventListener("click", function(event){
     switch(state.current){
         case state.getReady:
         state.current = state.play;
+        SWOOSHING.play();
         break;
         case state.play:
         Bird.flap();
+        FLAP.play();
         break;
 
         case state.gameOver:
@@ -136,6 +149,7 @@ const Bird = {
                 this.y = cvs.height - fg.h - this.h/2;
                 if(state.current == state.play){
                     state.current = state.gameOver;
+                    DIE.play();
                 }
             }
             // if code will allow for the bird to fall down when the speed is greater than the jump
@@ -261,6 +275,7 @@ const pipes = {
             if(Bird.x + Bird.radius > p.x && Bird.x - Bird.radius < p.x + this.w && Bird.y
                 + Bird.radius > p.y && Bird.y - Bird.radius < p.y + this.h){
                     state.current = state.gameOver;
+                    HIT.play();
                 }
                 // this code moves the pipes to the left
                 p.x -= this.dx;
@@ -268,17 +283,16 @@ const pipes = {
             if(Bird.x + Bird.radius > p.x && Bird.x - Bird.radius < p.x + this.w && Bird.y
                 + Bird.radius > bottomPipeYPossition && Bird.y - Bird.radius < bottomPipeYPossition + this.h){
                     state.current = state.gameOver;
+                    HIT.play();
                 }
             // this code will allow for the pipes to be deleted afer they go pass the canvas 
             if(p.x + this.w <=0){
                 this.position.shift();
                 score.value += 1;
+                SCORE_S.play();
 
                 score.best = Math.max(score.value, score.best);
                 localStorage.setItem("best", score.best);
-            }
-            if(score.value == 1){
-                p.x -= this.dx * 2;
             }
         }
     },

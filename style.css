@@ -3,3 +3,12 @@ canvas{
     display: block;
     margin: 0 auto;
 }
+body{
+    background-image: url('https://data.1freewallpapers.com/download/summer-mountains-nature-lake-river-grass-2560x1440.jpg')
+}
+h1{
+    text-align: center;
+    font-family: "Gotu" sans-serif;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+}
